@@ -1,6 +1,3 @@
 [submodule "libs/curlpp"]
 	path = libs/curlpp
 	url = https://github.com/jpbarrette/curlpp.git
-[submodule "libs/cjson"]
-	path = libs/cjson
-	url = https://github.com/DaveGamble/cJSON.git
