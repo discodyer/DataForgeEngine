@@ -4,3 +4,9 @@
 [submodule "libs/curl"]
 	path = libs/curl
 	url = https://github.com/curl/curl.git
+[submodule "libs/mosquitto"]
+	path = libs/mosquitto
+	url = https://github.com/eclipse/mosquitto.git
+[submodule "libs/cjson"]
+	path = libs/cjson
+	url = https://github.com/DaveGamble/cJSON.git
