@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.4)
 project(DataForge VERSION 1.0)
 
 # C++标准
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(ENABLE_CUSTOM_COMPILER_FLAGS Off)
 
@@ -29,7 +29,7 @@ add_subdirectory(libs)
 add_executable(DataForge ${DIR_SRCS})
 
 # 确保链接到libs目录下编译的libcurl
-target_link_libraries(DataForge PRIVATE libcurl curlpp cjson)
+target_link_libraries(DataForge PRIVATE libcurl curlpp)
 
 # 添加单元测试
 add_executable(HttpPostGet examples/HttpPostGet.cc src/HttpClient.cc)
