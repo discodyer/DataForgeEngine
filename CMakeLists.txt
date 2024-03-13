@@ -36,9 +36,6 @@ target_link_libraries(DataForge PRIVATE libcurl curlpp mosquittopp cjson serial 
 # 添加 Http 单元测试
 add_executable(HttpPostGet examples/HttpPostGet.cc src/HttpClient.cc)
 target_link_libraries(HttpPostGet PRIVATE curlpp libcurl)
-# set_target_properties(HttpPostGet PROPERTIES
-#     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
-# )
 
 # 添加 MQTT 客户端 单元测试测试
 add_executable(MqttClientTest examples/MqttClientTest.cc src/MqttClient.cc)
@@ -60,6 +57,19 @@ target_link_libraries(WebInterfaceTest PRIVATE curlpp libcurl)
 add_executable(DatabaseManagerTest examples/DatabaseManagerTest.cc src/DatabaseManager.cc)
 target_link_libraries(DatabaseManagerTest PRIVATE sqlite3)
 
+# 添加 DataProcessor 单元测试
+add_executable(DataProcessorTest 
+    examples/DataProcessorTest.cc 
+    src/DataProcessor.cc 
+    src/HttpClient.cc 
+    src/MqttClient.cc 
+    src/JsonParser.cc 
+    src/SerialPort.cc 
+    src/WebInterface.cc 
+    src/DatabaseManager.cc
+)
+target_link_libraries(DataProcessorTest PRIVATE libcurl curlpp mosquittopp cjson serial sqlite3)
+
 enable_testing()
 
 add_test(NAME HttpPostGetTest COMMAND HttpPostGet)
@@ -68,3 +78,4 @@ add_test(NAME JsonParserTest COMMAND JsonParserTest)
 add_test(NAME SerialPortTest COMMAND SerialPortTest)
 add_test(NAME WebInterfaceTest COMMAND WebInterfaceTest)
 add_test(NAME DatabaseManagerTest COMMAND DatabaseManagerTest)
+add_test(NAME DataProcessorTest COMMAND DataProcessorTest)
