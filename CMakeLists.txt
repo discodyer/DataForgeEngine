@@ -17,6 +17,27 @@ include_directories(${PROJECT_SOURCE_DIR}/libs/curl/include)
 include_directories(${PROJECT_SOURCE_DIR}/libs/libserial/src)
 include_directories(${PROJECT_SOURCE_DIR}/libs/cjson)
 include_directories(${PROJECT_SOURCE_DIR}/libs/curlpp/include)
+include_directories(
+   ${PROJECT_SOURCE_DIR}/libs/poco/ApacheConnector/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/CppParser/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/CppUnit/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/Crypto/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/Data/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/Encodings/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/Foundation/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/JSON/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/MongoDB/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/Net/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/NetSSL_OpenSSL/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/NetSSL_Win/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/openssl/build/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/PDF/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/Redis/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/SevenZip/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/Util/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/XML/include
+   ${PROJECT_SOURCE_DIR}/libs/poco/Zip/include
+)
 
 # 枚举头文件
 file(GLOB_RECURSE INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/include/DataForge/*.h)
@@ -36,6 +57,8 @@ set(LIBSERIAL_ENABLE_TESTING False)
 
 # curl arguments
 set(BUILD_STATIC_CURL False)
+# disable cjson uninstall target or Poco will complain
+set(ENABLE_CJSON_UNINSTALL False)
 
 set(thirdparty_libraries
 	curl
@@ -43,6 +66,27 @@ set(thirdparty_libraries
 	cjson
 	libserial
 	mosquitto
+	poco
+)
+set(poco_targets
+# Poco::ApacheConnector
+# Poco::CppParser
+# Poco::CppUnit
+# Poco::Crypto
+# Poco::Data
+# Poco::Encodings
+Poco::Foundation
+Poco::JSON
+# Poco::MongoDB
+Poco::Net
+# Poco::NetSSL_OpenSSL
+# Poco::NetSSL_Win
+# Poco::PDF
+# Poco::Redis
+# Poco::SevenZip
+# Poco::Util
+# Poco::XML
+Poco::Zip
 )
 set(thirdparty_link_libraries
 	cjson
@@ -51,6 +95,7 @@ set(thirdparty_link_libraries
 	libserial_static
 	mosquittopp
 	sqlite3
+	${poco_targets}
 )
 
 # 添加子目录
@@ -90,7 +135,7 @@ target_link_libraries(SerialPortTest PRIVATE serial)
 
 # 添加 WebInterface 单元测试
 add_executable(WebInterfaceTest examples/WebInterfaceTest.cc src/WebInterface.cc)
-target_link_libraries(WebInterfaceTest PRIVATE curlpp libcurl)
+target_link_libraries(WebInterfaceTest PRIVATE curlpp libcurl ${poco_targets})
 
 # 添加 DatabaseManager 单元测试
 add_executable(DatabaseManagerTest examples/DatabaseManagerTest.cc src/DatabaseManager.cc)

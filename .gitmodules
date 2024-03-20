@@ -13,3 +13,6 @@
 [submodule "libs/libserial"]
 	path = libs/libserial
 	url = https://github.com/crayzeewulf/libserial
+[submodule "libs/poco"]
+	path = libs/poco
+	url = https://github.com/pocoproject/poco.git
