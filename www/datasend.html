@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Data</title>
+    <style>
+        /* 设置输入框的宽度为窗口宽度的80% */
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        /* 设置显示区域的样式 */
+        #responseArea {
+            width: 80%;
+            height: 300px;
+            /* 设置显示区域的高度 */
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+            /* 如果内容溢出显示区域，则显示滚动条 */
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Send Data</h2>
+    <form id="myForm">
+        <label for="data">Input:</label>
+        <input type="text" id="data" name="data">
+        <br>
+        <!-- 下拉菜单选择传输协议 -->
+        <label for="protocol">Post Data to:</label>
+        <select id="protocol" name="protocol">
+            <option value="http">HTTP</option>
+            <option value="mqtt">MQTT</option>
+            <option value="serial">Serial</option>
+        </select>
+
+        <button type="submit">Send</button>
+    </form>
+
+    <!-- 显示服务器返回数据的区域 -->
+    <div id="responseArea"></div>
+
+    <script>
+        document.getElementById("myForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // 阻止默认的表单提交行为
+
+            // 定义 POST 请求的 URL
+            var url = "http://localhost:8081/post";
+            
+            var formData = new FormData(this); // 创建表单数据对象
+
+            var xhr = new XMLHttpRequest(); // 创建 XMLHttpRequest 对象
+            // 定义 POST 请求
+            xhr.open("POST", url, true);
+            // 设置请求头
+            // xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            xhr.timeout = 1000;
+
+            // 定义请求完成后的回调函数
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    // 在显示区域中显示服务器返回的数据
+                    document.getElementById("responseArea").innerText = xhr.responseText;
+                } else {
+                    alert('Failed to send data. Status code: ' + xhr.status);
+                }
+            };
+
+            // 定义超时后的回调函数
+            xhr.ontimeout = function () {
+                alert('Request timed out.');
+                xhr.abort();
+            };
+
+            // 发送请求
+            xhr.send(formData);
+        });
+    </script>
+</body>
+
+</html>

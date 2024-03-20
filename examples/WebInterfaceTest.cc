@@ -1,7 +1,9 @@
 #include "WebInterface.h"
 #include <iostream>
+#include <WebInterface.h>
 
-int main() {
-    // 创建 WebInterface 对象
-    return 0;
+int main(int argc, char** argv)
+{
+    WebInterface app;
+    return app.run(argc, argv);
 }
