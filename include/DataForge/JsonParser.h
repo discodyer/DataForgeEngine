@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <cjson/cJSON.h>
+#include <cJSON.h>
 
 class JsonParser {
 public:
