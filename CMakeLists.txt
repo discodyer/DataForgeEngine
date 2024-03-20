@@ -8,10 +8,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # set(ENABLE_CUSTOM_COMPILER_FLAGS Off)
 set(DOCUMENTATION False)
 
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
 # 包含的头文件目录
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/DataForge)
 include_directories(${PROJECT_SOURCE_DIR}/libs/mosquitto/include)
 include_directories(${PROJECT_SOURCE_DIR}/libs/curl/include)
+include_directories(${PROJECT_SOURCE_DIR}/libs/libserial/src)
+include_directories(${PROJECT_SOURCE_DIR}/libs/cjson)
 include_directories(${PROJECT_SOURCE_DIR}/libs/curlpp/include)
 
 # 枚举头文件
@@ -24,14 +28,49 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # 查找当前目录下的所有源文件，并将名称保存到 DIR_SRCS 变量
 aux_source_directory(src DIR_SRCS)
 
-# 添加子目录（如果你有子项目或库）
-add_subdirectory(libs)
+# libserial arguments
+set(LIBSERIAL_BUILD_DOCS False)
+set(LIBSERIAL_PYTHON_ENABLE False)
+# offline, my boy
+set(LIBSERIAL_ENABLE_TESTING False)
+
+# curl arguments
+set(BUILD_STATIC_CURL False)
+
+set(thirdparty_libraries
+	curl
+	curlpp
+	cjson
+	libserial
+	mosquitto
+)
+set(thirdparty_link_libraries
+	cjson
+	${libcurl_static}
+	curlpp
+	libserial_static
+	mosquittopp
+	sqlite3
+)
+
+# 添加子目录
+foreach(lib IN LISTS thirdparty_libraries)
+	message("[thirdparty] including library ${lib}")
+	add_subdirectory("libs/${lib}")
+endforeach()
+
+# for libserial
+link_directories(${CMAKE_BINARY_DIR}/lib)
+
+set(link_libraries
+	${thirdparty_link_libraries}
+)
 
 # 指定生成目标
 add_executable(DataForge ${DIR_SRCS})
 
-# 确保链接到libs目录下编译的libcurl
-target_link_libraries(DataForge PRIVATE libcurl curlpp mosquittopp cjson serial sqlite3)
+# 确保链接到libs目录下编译的libs
+target_link_libraries(DataForge PRIVATE ${link_libraries})
 
 # 添加 Http 单元测试
 add_executable(HttpPostGet examples/HttpPostGet.cc src/HttpClient.cc)
@@ -58,17 +97,17 @@ add_executable(DatabaseManagerTest examples/DatabaseManagerTest.cc src/DatabaseM
 target_link_libraries(DatabaseManagerTest PRIVATE sqlite3)
 
 # 添加 DataProcessor 单元测试
-add_executable(DataProcessorTest 
-    examples/DataProcessorTest.cc 
-    src/DataProcessor.cc 
-    src/HttpClient.cc 
-    src/MqttClient.cc 
-    src/JsonParser.cc 
-    src/SerialPort.cc 
-    src/WebInterface.cc 
+add_executable(DataProcessorTest
+    examples/DataProcessorTest.cc
+    src/DataProcessor.cc
+    src/HttpClient.cc
+    src/MqttClient.cc
+    src/JsonParser.cc
+    src/SerialPort.cc
+    src/WebInterface.cc
     src/DatabaseManager.cc
 )
-target_link_libraries(DataProcessorTest PRIVATE libcurl curlpp mosquittopp cjson serial sqlite3)
+target_link_libraries(DataProcessorTest PRIVATE ${link_libraries})
 
 enable_testing()
 
