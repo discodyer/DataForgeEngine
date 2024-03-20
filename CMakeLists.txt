@@ -96,10 +96,14 @@ target_link_libraries(WebInterfaceTest PRIVATE curlpp libcurl)
 add_executable(DatabaseManagerTest examples/DatabaseManagerTest.cc src/DatabaseManager.cc)
 target_link_libraries(DatabaseManagerTest PRIVATE sqlite3)
 
-# 添加 DataProcessor 单元测试
-add_executable(DataProcessorTest
-    examples/DataProcessorTest.cc
-    src/DataProcessor.cc
+# 添加 DataProcessorTest 单元测试
+add_executable(DataProcessorTest examples/DataProcessorTest.cc src/DataProcessor.cc)
+target_link_libraries(DataProcessorTest PRIVATE )
+
+# 添加 DataForgeEngine 单元测试
+add_executable(DataForgeEngineTest
+    examples/DataForgeEngineTest.cc
+    src/DataForgeEngine.cc
     src/HttpClient.cc
     src/MqttClient.cc
     src/JsonParser.cc
@@ -107,7 +111,7 @@ add_executable(DataProcessorTest
     src/WebInterface.cc
     src/DatabaseManager.cc
 )
-target_link_libraries(DataProcessorTest PRIVATE ${link_libraries})
+target_link_libraries(DataForgeEngineTest PRIVATE ${link_libraries})
 
 enable_testing()
 
@@ -118,3 +122,4 @@ add_test(NAME SerialPortTest COMMAND SerialPortTest)
 add_test(NAME WebInterfaceTest COMMAND WebInterfaceTest)
 add_test(NAME DatabaseManagerTest COMMAND DatabaseManagerTest)
 add_test(NAME DataProcessorTest COMMAND DataProcessorTest)
+add_test(NAME DataForgeEngineTest COMMAND DataForgeEngineTest)
