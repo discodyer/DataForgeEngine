@@ -82,16 +82,22 @@ void MqttClient::doLoop(int timeout)
     }
 
     // 开始循环
-    printf("Start!\n");
+    // printf("Start!\n");
+    std::cout << "Start loop for " << timeout << "s." << std::endl;
     while (!received && timeout--)
     {
-        std::this_thread::sleep_for(std::chrono::microseconds(1)); // 等待订阅完成
+        std::this_thread::sleep_for(std::chrono::seconds(1)); // 等待订阅完成
     }
 
     // 清理资源
     // mosquitto_disconnect(mosq);
     // mosquitto_destroy(mosq);
     // mosquitto_lib_cleanup();
+}
+
+std::string MqttClient::getLastPayload()
+{
+    return lastMessage;
 }
 
 void MqttClient::on_connect(mosquitto *mosq, void *obj, int reason_code)
@@ -168,5 +174,5 @@ void MqttClient::on_message(mosquitto *mosq, void *obj, const mosquitto_message 
     std::cout << "payload: " << (char *)msg->payload << std::endl;
 
     received = true;
-    lastMessage = std::string(static_cast<char*>(msg->payload), msg->payloadlen);
+    lastMessage = std::string(static_cast<char *>(msg->payload), msg->payloadlen);
 }

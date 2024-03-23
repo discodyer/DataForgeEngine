@@ -122,6 +122,7 @@ std::string PostRequestHandler::convJsonToMqtt(const std::string &payload)
     const cJSON *client_name = cJSON_GetObjectItemCaseSensitive(json, "client_name");
     const cJSON *topic = cJSON_GetObjectItemCaseSensitive(json, "topic");
     const cJSON *message = cJSON_GetObjectItemCaseSensitive(json, "message");
+    const cJSON *timeout = cJSON_GetObjectItemCaseSensitive(json, "timeout");
 
     if (cJSON_IsString(url) && (url->valuestring != NULL) &&
         cJSON_IsNumber(port) &&
@@ -131,6 +132,15 @@ std::string PostRequestHandler::convJsonToMqtt(const std::string &payload)
     {
 
         publishDataToMqtt(std::string(url->valuestring), port->valueint, std::string(client_name->valuestring), std::string(topic->valuestring), std::string(message->valuestring));
+    }
+    else if (cJSON_IsString(url) && (url->valuestring != NULL) &&
+             cJSON_IsNumber(port) &&
+             cJSON_IsString(client_name) && (client_name->valuestring != NULL) &&
+             cJSON_IsString(topic) && (topic->valuestring != NULL) &&
+             cJSON_IsNumber(timeout))
+    {
+
+        return fetchDataFromMqtt(std::string(url->valuestring), port->valueint, std::string(client_name->valuestring), std::string(topic->valuestring), timeout->valueint);
     }
     else
     {
@@ -148,28 +158,40 @@ std::string PostRequestHandler::fetchDataFromMqtt(const std::string &url, int po
         timeout = 1;
     }
 
-    MqttClient client(client_name);
-
-    client.connect(url, port, 60);
-
-    if (client.isConnected())
+    std::string payload;
+    try
     {
-        std::cout << "Connected to MQTT broker." << std::endl;
+        MqttClient client(client_name);
+        client.connect(url, port, 60);
+
+        if (client.isConnected())
+        {
+            std::cout << "Connected to MQTT broker." << std::endl;
+        }
+        else
+        {
+            std::cout << "Failed to connect to MQTT broker." << std::endl;
+            return "Failed to connect to MQTT broker.";
+        }
+
+        // 简单测试发布和订阅功能
+        client.subscribe(topic, 0);
+        std::this_thread::sleep_for(std::chrono::seconds(1)); // 等待订阅完成
+
+        client.doLoop(timeout); // 启动循环，并在10秒后停止
+
+        payload = client.getLastPayload();
+        // std::cout << payload << std::endl;
+        // 断开与MQTT服务器的连接
+        client.disconnect();
+        std::cout << "Connection closed." << std::endl;
     }
-    else
+    catch (const std::exception &e)
     {
-        std::cout << "Failed to connect to MQTT broker." << std::endl;
-        return "Failed to connect to MQTT broker.";
+        std::cerr << "Exception: " << e.what() << std::endl;
+        return std::string("Exception: ") + e.what();
     }
-
-    // 简单测试发布和订阅功能
-    client.subscribe(topic, 0);
-    std::this_thread::sleep_for(std::chrono::seconds(1)); // 等待订阅完成
-
-    std::this_thread::sleep_for(std::chrono::seconds(1)); // 等待消息发布
-
-    client.disconnect();
-    return "Message sent to MQTT broker.";
+    return payload;
 }
 
 HTTPRequestHandler *RequestHandlerFactory::createRequestHandler(const HTTPServerRequest &request)

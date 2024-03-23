@@ -24,6 +24,8 @@ public:
 
     void doLoop(int timeout);
 
+    std::string getLastPayload();
+    
 private:
     struct mosquitto* mosq;
     bool connected;
