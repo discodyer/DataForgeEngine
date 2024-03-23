@@ -8,13 +8,17 @@ HttpClient::~HttpClient() {
     curlpp::terminate();
 }
 
-std::string HttpClient::get(const std::string& url) {
+std::string HttpClient::get(const std::string& url, size_t timeout) {
     try {
         curlpp::Cleanup cleaner;
         curlpp::Easy request;
         using namespace curlpp::Options;
         std::ostringstream responseStream;
         request.setOpt(new Url(url)); // 设置请求的 URL
+        // 设置连接的超时时间，单位是秒
+        request.setOpt(new curlpp::options::ConnectTimeout(timeout));
+        // 设置总的请求超时时间，单位是秒
+        request.setOpt(new curlpp::options::Timeout(timeout));
         // Url url_;
         // request.getOpt(url_);
         // std::cout<<"Url:"<<url_.getValue()<<std::endl;

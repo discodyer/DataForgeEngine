@@ -134,8 +134,14 @@ add_executable(SerialPortTest examples/SerialPortTest.cc src/SerialPort.cc)
 target_link_libraries(SerialPortTest PRIVATE serial)
 
 # 添加 WebInterface 单元测试
-add_executable(WebInterfaceTest examples/WebInterfaceTest.cc src/WebInterface.cc)
-target_link_libraries(WebInterfaceTest PRIVATE curlpp libcurl ${poco_targets})
+add_executable(WebInterfaceTest 
+    examples/WebInterfaceTest.cc 
+    src/WebInterface.cc
+    src/HttpClient.cc
+    src/MqttClient.cc
+    src/SerialPort.cc
+)
+target_link_libraries(WebInterfaceTest PRIVATE curlpp libcurl ${poco_targets} serial mosquittopp cjson)
 
 # 添加 DatabaseManager 单元测试
 add_executable(DatabaseManagerTest examples/DatabaseManagerTest.cc src/DatabaseManager.cc)

@@ -13,7 +13,7 @@ public:
     HttpClient();
     ~HttpClient();
 
-    std::string get(const std::string& url);
+    std::string get(const std::string& url, size_t timeout = 1);
     std::string post(const std::string& url, const std::string& postData);
 };
 

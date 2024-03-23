@@ -60,9 +60,9 @@
             // 定义 POST 请求
             xhr.open("POST", url, true);
             // 设置请求头
-            // xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            // xhr.setRequestHeader("Content-Type", "multipart/form-data");
 
-            xhr.timeout = 1000;
+            xhr.timeout = 10000;
 
             // 定义请求完成后的回调函数
             xhr.onload = function () {
