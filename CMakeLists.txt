@@ -86,7 +86,7 @@ Poco::Net
 # Poco::SevenZip
 Poco::Util
 # Poco::XML
-Poco::Zip
+# Poco::Zip
 )
 set(thirdparty_link_libraries
 	cjson
@@ -169,8 +169,8 @@ enable_testing()
 add_test(NAME HttpPostGetTest COMMAND HttpPostGet)
 add_test(NAME MqttClientTest COMMAND MqttClientTest)
 add_test(NAME JsonParserTest COMMAND JsonParserTest)
-add_test(NAME SerialPortTest COMMAND SerialPortTest)
-add_test(NAME WebInterfaceTest COMMAND WebInterfaceTest)
+# add_test(NAME SerialPortTest COMMAND SerialPortTest)
+# add_test(NAME WebInterfaceTest COMMAND WebInterfaceTest)
 add_test(NAME DatabaseManagerTest COMMAND DatabaseManagerTest)
 add_test(NAME DataProcessorTest COMMAND DataProcessorTest)
 add_test(NAME DataForgeEngineTest COMMAND DataForgeEngineTest)

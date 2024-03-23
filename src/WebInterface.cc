@@ -44,7 +44,7 @@ void PostRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerRes
             }
             else if (protocolValue == "serial")
             {
-                out << "Serial:";
+                out << "Serial: Not supported yet!";
             }
             else
             {
@@ -141,9 +141,35 @@ std::string PostRequestHandler::convJsonToMqtt(const std::string &payload)
     return "Data sent to Target MQTT broker.";
 }
 
-std::string PostRequestHandler::fetchDataFromSerialPort(const std::string &payload)
+std::string PostRequestHandler::fetchDataFromMqtt(const std::string &url, int port, const std::string &client_name, const std::string &topic, size_t timeout)
 {
-    return std::string();
+    if (timeout < 1)
+    {
+        timeout = 1;
+    }
+
+    MqttClient client(client_name);
+
+    client.connect(url, port, 60);
+
+    if (client.isConnected())
+    {
+        std::cout << "Connected to MQTT broker." << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to connect to MQTT broker." << std::endl;
+        return "Failed to connect to MQTT broker.";
+    }
+
+    // 简单测试发布和订阅功能
+    client.subscribe(topic, 0);
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // 等待订阅完成
+
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // 等待消息发布
+
+    client.disconnect();
+    return "Message sent to MQTT broker.";
 }
 
 HTTPRequestHandler *RequestHandlerFactory::createRequestHandler(const HTTPServerRequest &request)

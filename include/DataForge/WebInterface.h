@@ -29,10 +29,10 @@ public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) override;
     std::string fetchDataFromHttpGet(const std::string& url);
     std::string fetchDataFromHttpPost(const std::string& url, const std::string& payload);
+    std::string fetchDataFromMqtt(const std::string &url, int port, const std::string &client_name, const std::string &topic, size_t timeout);
     std::string publishDataToMqtt(const std::string &url, int port, const std::string &client_name, const std::string &topic, const std::string &message);
     std::string convJsonToMqtt(const std::string &payload);
     std::string fetchDataFromSerialPort(const std::string& payload);
-
 };
 
 class RequestHandlerFactory : public HTTPRequestHandlerFactory
