@@ -188,8 +188,14 @@ public:
     {
         try
         {
-            outputs.push_back(StringUtils::concat(std::any_cast<std::string>(inputs[0]),
-                                                  std::any_cast<std::string>(inputs[1])));
+            std::string result = std::any_cast<std::string>(inputs[0]);
+            // outputs.push_back(StringUtils::concat(std::any_cast<std::string>(inputs[0]),
+            //                                       std::any_cast<std::string>(inputs[1])));
+            for (size_t i = 1; i < inputs.size(); ++i)
+            {
+                result = StringUtils::concat(result, std::any_cast<std::string>(inputs[i]));
+            }
+            outputs.push_back(result);
         }
         catch (std::bad_any_cast &e)
         {
@@ -445,7 +451,7 @@ public:
         {
             std::cout << "Echo: " << std::any_cast<std::string>(str) << std::endl;
         }
-        getNextStep()->setInputs(getInput());
+        getNextStep()->setInputs(getLastStep()->getOutputs());
         getNextStep()->execute();
     }
 };

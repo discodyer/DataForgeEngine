@@ -195,7 +195,7 @@ void StepManager::parse_steps(cJSON *steps, BaseStep *root)
         if (strcmp(step_name->valuestring, "concat") == 0)
         {
             cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
-            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) <= 2)
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) > 0)
             {
                 std::vector<std::any> input_;
                 for (int i = 0; i < cJSON_GetArraySize(input); i++)
