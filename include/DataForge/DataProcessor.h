@@ -9,6 +9,8 @@
 #include <climits>
 #include <algorithm>
 #include <functional>
+#include <memory>
+#include <any>
 
 class StringUtils
 {
@@ -95,6 +97,351 @@ public:
 
     // 获取content编码
     static std::string getContentEncoding(/* 参数 */);
+};
+
+class BaseStep
+{
+protected:
+    std::string type;                                // 步骤类型
+    std::vector<std::any> inputs;                    // 输入列表
+    std::vector<std::any> output;                    // 输出列表
+    std::vector<std::shared_ptr<BaseStep>> children; // 子步骤列表
+
+public:
+    BaseStep(const std::string &type, const std::vector<std::any> &inputs)
+        : type(type), inputs(inputs) {}
+
+    virtual ~BaseStep() {}
+
+    // 添加子步骤
+    void addChild(std::shared_ptr<BaseStep> child)
+    {
+        children.push_back(child);
+    }
+
+    // 设置输入
+    void setInputs(const std::vector<std::any> &inputs)
+    {
+        this->inputs = inputs;
+    }
+
+    // 获取输出
+    std::vector<std::any> getOutput() const
+    {
+        return output;
+    }
+
+    // 纯虚函数，执行步骤的具体操作
+    virtual void execute() = 0;
+
+    // 执行所有子步骤
+    void executeChildren()
+    {
+        for (auto &child : children)
+        {
+            child->execute();
+        }
+    }
+
+    // 获取步骤类型
+    std::string getType() const
+    {
+        return type;
+    }
+};
+
+class ConcatStep : public BaseStep
+{
+public:
+    ConcatStep(const std::vector<std::any> &inputs)
+        : BaseStep("concat", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        try
+        {
+            output.push_back(StringUtils::concat(std::any_cast<std::string>(inputs[0]),
+                                                 std::any_cast<std::string>(inputs[1])));
+        }
+        catch (std::bad_any_cast &e)
+        {
+            std::cerr << "EXCEPTION: " << e.what() << '\n';
+        }
+    }
+};
+
+class FormatNumberStep : public BaseStep
+{
+public:
+    FormatNumberStep(const std::vector<std::any> &inputs)
+        : BaseStep("formatNumber", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        try
+        {
+            output.push_back(StringUtils::formatNumber(std::any_cast<int>(inputs[0])));
+        }
+        catch (std::bad_any_cast &e)
+        {
+            std::cerr << "EXCEPTION: " << e.what() << '\n';
+        }
+    }
+};
+
+class IndexOfStep : public BaseStep
+{
+public:
+    IndexOfStep(const std::vector<std::any> &inputs)
+        : BaseStep("indexOf", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        try
+        {
+            output.push_back(StringUtils::indexOf(std::any_cast<std::string>(inputs[0]),
+                                                  std::any_cast<std::string>(inputs[1])));
+        }
+        catch (std::bad_any_cast &e)
+        {
+            std::cerr << "EXCEPTION: " << e.what() << '\n';
+        }
+    }
+};
+
+class LastIndexOfStep : public BaseStep
+{
+public:
+    LastIndexOfStep(const std::vector<std::any> &inputs)
+        : BaseStep("lastIndexOf", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        try
+        {
+            output.push_back(StringUtils::lastIndexOf(std::any_cast<std::string>(inputs[0]),
+                                                      std::any_cast<std::string>(inputs[1])));
+        }
+        catch (std::bad_any_cast &e)
+        {
+            std::cerr << "EXCEPTION: " << e.what() << '\n';
+        }
+    }
+};
+
+class LengthStep : public BaseStep
+{
+public:
+    LengthStep(const std::vector<std::any> &inputs)
+        : BaseStep("length", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        try
+        {
+            output.push_back(StringUtils::length(std::any_cast<std::string>(inputs[0])));
+        }
+        catch (std::bad_any_cast &e)
+        {
+            std::cerr << "EXCEPTION: " << e.what() << '\n';
+        }
+    }
+};
+
+class ReplaceStep : public BaseStep
+{
+public:
+    ReplaceStep(const std::vector<std::any> &inputs)
+        : BaseStep("replace", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        try
+        {
+            output.push_back(StringUtils::replace(std::any_cast<std::string>(inputs[0]),
+                                                  std::any_cast<std::string>(inputs[1]),
+                                                  std::any_cast<std::string>(inputs[2])));
+        }
+        catch (std::bad_any_cast &e)
+        {
+            std::cerr << "EXCEPTION: " << e.what() << '\n';
+        }
+    }
+};
+
+class SplitStep : public BaseStep
+{
+public:
+    SplitStep(const std::vector<std::any> &inputs)
+        : BaseStep("split", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        try
+        {
+            auto strings = StringUtils::split(std::any_cast<std::string>(inputs[0]),
+                                              std::any_cast<char>(inputs[1]));
+            // 将每个字符串作为 std::any 存储
+            for (const auto &str : strings)
+            {
+                output.push_back(str);
+            }
+        }
+        catch (std::bad_any_cast &e)
+        {
+            std::cerr << "EXCEPTION: " << e.what() << '\n';
+        }
+    }
+};
+
+class SubtringStep : public BaseStep
+{
+public:
+    SubtringStep(const std::vector<std::any> &inputs)
+        : BaseStep("substring", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        try
+        {
+            output.push_back(StringUtils::substring(std::any_cast<std::string>(inputs[0]),
+                                                    std::any_cast<std::size_t>(inputs[1]),
+                                                    std::any_cast<std::size_t>(inputs[2])));
+        }
+        catch (std::bad_any_cast &e)
+        {
+            std::cerr << "EXCEPTION: " << e.what() << '\n';
+        }
+    }
+};
+
+class ToLowerStep : public BaseStep
+{
+public:
+    ToLowerStep(const std::vector<std::any> &inputs)
+        : BaseStep("toLower", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        try
+        {
+            output.push_back(StringUtils::toLower(std::any_cast<std::string>(inputs[0])));
+        }
+        catch (std::bad_any_cast &e)
+        {
+            std::cerr << "EXCEPTION: " << e.what() << '\n';
+        }
+    }
+};
+
+class ToUpperStep : public BaseStep
+{
+public:
+    ToUpperStep(const std::vector<std::any> &inputs)
+        : BaseStep("toUpper", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        try
+        {
+            output.push_back(StringUtils::toUpper(std::any_cast<std::string>(inputs[0])));
+        }
+        catch (std::bad_any_cast &e)
+        {
+            std::cerr << "EXCEPTION: " << e.what() << '\n';
+        }
+    }
+};
+
+class TrimStep : public BaseStep
+{
+public:
+    TrimStep(const std::vector<std::any> &inputs)
+        : BaseStep("trim", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        try
+        {
+            output.push_back(StringUtils::trim(std::any_cast<std::string>(inputs[0])));
+        }
+        catch (std::bad_any_cast &e)
+        {
+            std::cerr << "EXCEPTION: " << e.what() << '\n';
+        }
+    }
+};
+
+class IfElseStep : public BaseStep
+{
+private:
+    std::function<bool()> condition; // 条件判断函数
+
+public:
+    IfElseStep(const std::vector<std::any> &inputs, std::function<bool()> condition, const std::vector<std::shared_ptr<BaseStep>>& childSteps)
+        : BaseStep("ifelse", inputs), condition(condition) {
+            for (auto& child : childSteps) {
+            children.push_back(child); // 添加子步骤到 children 列表中
+        }
+        }
+
+    void execute() override
+    {
+        if (condition())
+        {
+            // 如果条件为真，执行第一个子节点
+            if (!children.empty())
+            {
+                children[0]->execute();
+            }
+        }
+        else
+        {
+            // 如果条件为假，执行第二个子节点
+            if (children.size() > 1)
+            {
+                children[1]->execute();
+            }
+        }
+    }
+};
+
+class StepManager
+{
+private:
+    std::shared_ptr<BaseStep> root;
+
+public:
+    StepManager() : root(nullptr) {}
+
+    // 从 JSON 文件构建步骤树的方法（伪代码，需要实现JSON解析和树的构建）
+    void buildStepTree(const std::string &jsonFilePath)
+    {
+        // 解析 JSON 文件，构建步骤树
+        // 这里需要实现具体的 JSON 解析逻辑
+    }
+
+    // 执行步骤树
+    void execute()
+    {
+        if (root != nullptr)
+        {
+            root->execute();
+        }
+    }
+
+    // 其他方法...
 };
 
 #endif // DATAPROCESSOR_H

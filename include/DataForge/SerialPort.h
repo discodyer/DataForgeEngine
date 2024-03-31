@@ -1,11 +1,8 @@
 #ifndef SERIALPORTWRAPPER_H
 #define SERIALPORTWRAPPER_H
 
-#include <libserial/SerialPort.h>
 #include <string>
-
-#include <string>
-#include <libserial/SerialStream.h> // 请确保已安装 serial 库
+#include <libserial/SerialStream.h>
 #include <libserial/SerialPort.h>
 
 class SerialBase

@@ -177,5 +177,5 @@ add_test(NAME JsonParserTest COMMAND JsonParserTest) # 测试JSON序列化和反
 add_test(NAME SerialPortTest COMMAND SerialPortTest) # 未连接串口设备会提示出错,因此暂时不测试串口功能
 # add_test(NAME WebInterfaceTest COMMAND WebInterfaceTest) # 测试网页响应功能
 add_test(NAME DatabaseManagerTest COMMAND DatabaseManagerTest) # 测试数据库
-add_test(NAME DataProcessorTest COMMAND DataProcessorTest) # 测试数据处理库
+add_test(NAME DataProcessorTest COMMAND DataProcessorTest) # 测试字符串处理库
 add_test(NAME DataForgeEngineTest COMMAND DataForgeEngineTest) # 测试数据处理引擎
