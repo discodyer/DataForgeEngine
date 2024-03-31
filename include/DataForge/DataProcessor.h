@@ -106,36 +106,33 @@ public:
 class BaseStep
 {
 protected:
-    std::string type;                                // 步骤类型
-    std::vector<std::any> inputs;                    // 输入列表
-    std::vector<std::any> output;                    // 输出列表
-    std::vector<std::shared_ptr<BaseStep>> children; // 子步骤列表
+    std::string type;              // 步骤类型
+    std::vector<std::any> inputs;  // 输入列表
+    std::vector<std::any> outputs; // 输出列表
+    BaseStep *last_step_;
+    BaseStep *next_step_;
 
 public:
-    BaseStep(const std::string &type, const std::vector<std::any> &inputs)
-        : type(type), inputs(inputs), children(std::vector<std::shared_ptr<BaseStep>>()) {}
+    BaseStep(const std::string &type, std::vector<std::any> inputs)
+        : type(type), inputs(inputs) {}
 
     BaseStep(const std::string &type)
-        : type(type), children(std::vector<std::shared_ptr<BaseStep>>()) {}
+        : type(type) {}
 
     virtual ~BaseStep() {}
 
-    // 添加子步骤
-    void addChild(std::shared_ptr<BaseStep> child)
-    {
-        children.push_back(child);
-    }
-
     // 设置输入
-    void setInputs(const std::vector<std::any> &inputs)
+    void setInputs(const std::vector<std::any> inputs)
     {
-        this->inputs = inputs;
+        for (auto input : inputs)
+        {
+            addInput(input);
+        }
     }
 
-    // 获取输出
-    std::vector<std::any> getOutput() const
+    void addInput(const std::any input)
     {
-        return output;
+        this->inputs.push_back(input);
     }
 
     // 获取输入
@@ -144,17 +141,14 @@ public:
         return inputs;
     }
 
+    // 获取输出
+    std::vector<std::any> getOutputs() const
+    {
+        return outputs;
+    }
+
     // 纯虚函数，执行步骤的具体操作
     virtual void execute() = 0;
-
-    // 执行所有子步骤
-    void executeChildren()
-    {
-        for (auto &child : children)
-        {
-            child->execute();
-        }
-    }
 
     // 获取步骤类型
     std::string getType() const
@@ -162,18 +156,24 @@ public:
         return type;
     }
 
-    bool has_next_step() const
+    void setNextStep(BaseStep *next_step)
     {
-        return !children.empty();
+        next_step_ = next_step;
     }
 
-    std::shared_ptr<BaseStep> getNextStep()
+    void setLastStep(BaseStep *last_step)
     {
-        if(children.empty())
-        {
-            return nullptr;
-        }
-        return children[0];
+        last_step_ = last_step;
+    }
+
+    BaseStep *getNextStep()
+    {
+        return next_step_;
+    }
+
+    BaseStep *getLastStep()
+    {
+        return last_step_;
     }
 };
 
@@ -188,15 +188,15 @@ public:
     {
         try
         {
-            output.push_back(StringUtils::concat(std::any_cast<std::string>(inputs[0]),
-                                                 std::any_cast<std::string>(inputs[1])));
+            outputs.push_back(StringUtils::concat(std::any_cast<std::string>(inputs[0]),
+                                                  std::any_cast<std::string>(inputs[1])));
         }
         catch (std::bad_any_cast &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
-        children[0]->setInputs(this->getInput());
-        children[0]->getNextStep()->execute();
+        getNextStep()->setInputs(getOutputs());
+        getNextStep()->execute();
     }
 };
 
@@ -211,14 +211,14 @@ public:
     {
         try
         {
-            output.push_back(StringUtils::formatNumber(std::any_cast<int>(inputs[0])));
+            outputs.push_back(StringUtils::formatNumber(std::any_cast<int>(inputs[0])));
         }
         catch (std::bad_any_cast &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
-        children[0]->setInputs(this->getInput());
-        children[0]->getNextStep()->execute();
+        getNextStep()->setInputs(getOutputs());
+        getNextStep()->execute();
     }
 };
 
@@ -233,15 +233,15 @@ public:
     {
         try
         {
-            output.push_back(StringUtils::indexOf(std::any_cast<std::string>(inputs[0]),
-                                                  std::any_cast<std::string>(inputs[1])));
+            outputs.push_back(StringUtils::indexOf(std::any_cast<std::string>(inputs[0]),
+                                                   std::any_cast<std::string>(inputs[1])));
         }
         catch (std::bad_any_cast &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
-        children[0]->setInputs(this->getInput());
-        children[0]->getNextStep()->execute();
+        getNextStep()->setInputs(getOutputs());
+        getNextStep()->execute();
     }
 };
 
@@ -256,15 +256,15 @@ public:
     {
         try
         {
-            output.push_back(StringUtils::lastIndexOf(std::any_cast<std::string>(inputs[0]),
-                                                      std::any_cast<std::string>(inputs[1])));
+            outputs.push_back(StringUtils::lastIndexOf(std::any_cast<std::string>(inputs[0]),
+                                                       std::any_cast<std::string>(inputs[1])));
         }
         catch (std::bad_any_cast &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
-        children[0]->setInputs(this->getInput());
-        children[0]->getNextStep()->execute();
+        getNextStep()->setInputs(getOutputs());
+        getNextStep()->execute();
     }
 };
 
@@ -279,14 +279,14 @@ public:
     {
         try
         {
-            output.push_back(StringUtils::length(std::any_cast<std::string>(inputs[0])));
+            outputs.push_back(StringUtils::length(std::any_cast<std::string>(inputs[0])));
         }
         catch (std::bad_any_cast &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
-        children[0]->setInputs(this->getInput());
-        children[0]->getNextStep()->execute();
+        getNextStep()->setInputs(getOutputs());
+        getNextStep()->execute();
     }
 };
 
@@ -301,16 +301,16 @@ public:
     {
         try
         {
-            output.push_back(StringUtils::replace(std::any_cast<std::string>(inputs[0]),
-                                                  std::any_cast<std::string>(inputs[1]),
-                                                  std::any_cast<std::string>(inputs[2])));
+            outputs.push_back(StringUtils::replace(std::any_cast<std::string>(inputs[0]),
+                                                   std::any_cast<std::string>(inputs[1]),
+                                                   std::any_cast<std::string>(inputs[2])));
         }
         catch (std::bad_any_cast &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
-        children[0]->setInputs(this->getInput());
-        children[0]->getNextStep()->execute();
+        getNextStep()->setInputs(getOutputs());
+        getNextStep()->execute();
     }
 };
 
@@ -326,19 +326,19 @@ public:
         try
         {
             auto strings = StringUtils::split(std::any_cast<std::string>(inputs[0]),
-                                              std::any_cast<char>(inputs[1]));
+                                              (std::any_cast<std::string>(inputs[1])).c_str()[0]);
             // 将每个字符串作为 std::any 存储
             for (const auto &str : strings)
             {
-                output.push_back(str);
+                outputs.push_back(str);
             }
         }
         catch (std::bad_any_cast &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
-        children[0]->setInputs(this->getInput());
-        children[0]->getNextStep()->execute();
+        getNextStep()->setInputs(getOutputs());
+        getNextStep()->execute();
     }
 };
 
@@ -353,16 +353,16 @@ public:
     {
         try
         {
-            output.push_back(StringUtils::substring(std::any_cast<std::string>(inputs[0]),
-                                                    std::any_cast<std::size_t>(inputs[1]),
-                                                    std::any_cast<std::size_t>(inputs[2])));
+            outputs.push_back(StringUtils::substring(std::any_cast<std::string>(inputs[0]),
+                                                     std::any_cast<std::size_t>(inputs[1]),
+                                                     std::any_cast<std::size_t>(inputs[2])));
         }
         catch (std::bad_any_cast &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
-        children[0]->setInputs(this->getInput());
-        children[0]->getNextStep()->execute();
+        getNextStep()->setInputs(getOutputs());
+        getNextStep()->execute();
     }
 };
 
@@ -377,14 +377,14 @@ public:
     {
         try
         {
-            output.push_back(StringUtils::toLower(std::any_cast<std::string>(inputs[0])));
+            outputs.push_back(StringUtils::toLower(std::any_cast<std::string>(inputs[0])));
         }
         catch (std::bad_any_cast &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
-        children[0]->setInputs(this->getInput());
-        children[0]->getNextStep()->execute();
+        getNextStep()->setInputs(getOutputs());
+        getNextStep()->execute();
     }
 };
 
@@ -399,14 +399,14 @@ public:
     {
         try
         {
-            output.push_back(StringUtils::toUpper(std::any_cast<std::string>(inputs[0])));
+            outputs.push_back(StringUtils::toUpper(std::any_cast<std::string>(inputs[0])));
         }
         catch (std::bad_any_cast &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
-        children[0]->setInputs(this->getInput());
-        children[0]->getNextStep()->execute();
+        getNextStep()->setInputs(getOutputs());
+        getNextStep()->execute();
     }
 };
 
@@ -421,14 +421,14 @@ public:
     {
         try
         {
-            output.push_back(StringUtils::trim(std::any_cast<std::string>(inputs[0])));
+            outputs.push_back(StringUtils::trim(std::any_cast<std::string>(inputs[0])));
         }
         catch (std::bad_any_cast &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
-        children[0]->setInputs(this->getInput());
-        children[0]->getNextStep()->execute();
+        getNextStep()->setInputs(getOutputs());
+        getNextStep()->execute();
     }
 };
 
@@ -441,7 +441,12 @@ public:
     // 实现具体的执行逻辑
     void execute() override
     {
-        std::cout << std::any_cast<std::string>(inputs[0]) << std::endl;
+        for (auto str : inputs)
+        {
+            std::cout << "Echo: " << std::any_cast<std::string>(str) << std::endl;
+        }
+        getNextStep()->setInputs(getInput());
+        getNextStep()->execute();
     }
 };
 
@@ -458,72 +463,71 @@ public:
     }
 };
 
-class IfElseStep : public BaseStep
-{
-private:
-    std::function<bool()> condition; // 条件判断函数
+// class IfElseStep : public BaseStep
+// {
+// private:
+//     std::function<bool()> condition; // 条件判断函数
 
-public:
-    IfElseStep(const std::vector<std::any> &inputs, std::function<bool()> condition, const std::vector<std::shared_ptr<BaseStep>> &childSteps)
-        : BaseStep("ifelse", inputs), condition(condition)
-    {
-        for (auto &child : childSteps)
-        {
-            children.push_back(child); // 添加子步骤到 children 列表中
-        }
-    }
+// public:
+//     IfElseStep(const std::vector<std::any> &inputs, std::function<bool()> condition, const std::vector<std::shared_ptr<BaseStep>> &childSteps)
+//         : BaseStep("ifelse", inputs), condition(condition)
+//     {
+//         for (auto &child : childSteps)
+//         {
+//             // children.push_back(child); // 添加子步骤到 children 列表中
+//         }
+//     }
 
-    void execute() override
-    {
-        if (condition())
-        {
-            // 如果条件为真，执行第一个子节点
-            if (!children.empty())
-            {
-                children[0]->setInputs(this->getInput());
-                children[0]->execute();
-            }
-        }
-        else
-        {
-            // 如果条件为假，执行第二个子节点
-            if (children.size() > 1)
-            {
-                children[1]->setInputs(this->getInput());
-                children[1]->execute();
-            }
-        }
-    }
-};
+//     void execute() override
+//     {
+//         if (condition())
+//         {
+//             // 如果条件为真，执行第一个子节点
+//             if (!children.empty())
+//             {
+//                 children[0]->setInputs(this->getInput());
+//                 children[0]->execute();
+//             }
+//         }
+//         else
+//         {
+//             // 如果条件为假，执行第二个子节点
+//             if (children.size() > 1)
+//             {
+//                 children[1]->setInputs(this->getInput());
+//                 children[1]->execute();
+//             }
+//         }
+//     }
+// };
 
 class RootStep : public BaseStep
 {
 public:
     RootStep()
-        : BaseStep("root") {}
+        : BaseStep("root")
+    {
+        next_step_ = nullptr;
+        last_step_ = nullptr;
+    }
 
     // 实现具体的执行逻辑
     void execute() override
     {
-        if(children[0]->getNextStep())
-        {
-            children[0]->getNextStep()->execute();
-        }
     }
 };
 
 class StepManager
 {
 private:
-    std::shared_ptr<BaseStep> root;
     RootStep root_;
 
     char *read_file(const char *filename);
-    void parse_steps(cJSON *steps, std::shared_ptr<BaseStep> &root);
+    void parse_steps(cJSON *steps, BaseStep *root);
     void parse_steps(cJSON *steps);
 
 public:
-    StepManager() : root(nullptr) {}
+    StepManager() {}
 
     // 从 JSON 文件构建步骤树
     int buildStepTree(const std::string &jsonFilePath);
@@ -531,13 +535,13 @@ public:
     // 执行步骤树
     void execute()
     {
-        if (root != nullptr)
+        if (root_.getNextStep() == nullptr)
         {
-            root->execute();
+            return;
         }
-    }
 
-    // 其他方法...
+        root_.getNextStep()->execute();
+    }
 };
 
 #endif // DATAPROCESSOR_H

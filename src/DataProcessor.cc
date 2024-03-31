@@ -130,7 +130,6 @@ std::string StringUtils::generate_hex(const unsigned int len)
 
 int StepManager::buildStepTree(const std::string &jsonFilePath)
 {
-    root = std::make_shared<RootStep>();
     char *data = read_file(jsonFilePath.c_str());
     if (data == NULL)
         return EXIT_FAILURE;
@@ -180,10 +179,10 @@ char *StepManager::read_file(const char *filename)
     return data;
 }
 
-void StepManager::parse_steps(cJSON *steps, std::shared_ptr<BaseStep> &root)
+void StepManager::parse_steps(cJSON *steps, BaseStep *root)
 {
     const cJSON *step = NULL;
-    std::shared_ptr<BaseStep> current_step = root;
+    BaseStep *current_step = root;
     cJSON_ArrayForEach(step, steps)
     {
         cJSON *step_name = cJSON_GetObjectItemCaseSensitive(step, "step_name");
@@ -196,9 +195,8 @@ void StepManager::parse_steps(cJSON *steps, std::shared_ptr<BaseStep> &root)
         if (strcmp(step_name->valuestring, "concat") == 0)
         {
             cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
-            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) == 2)
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) <= 2)
             {
-                std::shared_ptr<ConcatStep> childStep_ = std::make_shared<ConcatStep>(std::vector<std::any>());
                 std::vector<std::any> input_;
                 for (int i = 0; i < cJSON_GetArraySize(input); i++)
                 {
@@ -209,69 +207,299 @@ void StepManager::parse_steps(cJSON *steps, std::shared_ptr<BaseStep> &root)
                         input_.push_back(std::string(input_item->valuestring));
                     }
                 }
-                childStep_->setInputs(input_);
-                current_step->addChild(childStep_);
+                auto next_step_ = new ConcatStep(std::vector<std::any>());
+                current_step->setNextStep(next_step_);
+                next_step_->setLastStep(current_step);
+                next_step_->setInputs(input_);
+            }
+        }
+        else if (strcmp(step_name->valuestring, "formatNumber") == 0)
+        {
+            cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) <= 1)
+            {
+                std::vector<std::any> input_;
+                for (int i = 0; i < cJSON_GetArraySize(input); i++)
+                {
+                    cJSON *input_item = cJSON_GetArrayItem(input, i);
+                    if (cJSON_IsNumber(input_item))
+                    {
+                        printf("Input %d: %d\n", i, input_item->valueint);
+                        input_.push_back(int(input_item->valueint));
+                    }
+                }
+                auto next_step_ = new FormatNumberStep(std::vector<std::any>());
+                current_step->setNextStep(next_step_);
+                next_step_->setLastStep(current_step);
+                next_step_->setInputs(input_);
+            }
+        }
+        else if (strcmp(step_name->valuestring, "indexOf") == 0)
+        {
+            cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) <= 2)
+            {
+                std::vector<std::any> input_;
+                for (int i = 0; i < cJSON_GetArraySize(input); i++)
+                {
+                    cJSON *input_item = cJSON_GetArrayItem(input, i);
+                    if (cJSON_IsString(input_item))
+                    {
+                        printf("Input %d: %s\n", i, input_item->valuestring);
+                        input_.push_back(std::string(input_item->valuestring));
+                    }
+                }
+                auto next_step_ = new IndexOfStep(std::vector<std::any>());
+                current_step->setNextStep(next_step_);
+                next_step_->setLastStep(current_step);
+                next_step_->setInputs(input_);
+            }
+        }
+        else if (strcmp(step_name->valuestring, "lastIndexOf") == 0)
+        {
+            cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) <= 2)
+            {
+                std::vector<std::any> input_;
+                for (int i = 0; i < cJSON_GetArraySize(input); i++)
+                {
+                    cJSON *input_item = cJSON_GetArrayItem(input, i);
+                    if (cJSON_IsString(input_item))
+                    {
+                        printf("Input %d: %s\n", i, input_item->valuestring);
+                        input_.push_back(std::string(input_item->valuestring));
+                    }
+                }
+                auto next_step_ = new LastIndexOfStep(std::vector<std::any>());
+                current_step->setNextStep(next_step_);
+                next_step_->setLastStep(current_step);
+                next_step_->setInputs(input_);
+            }
+        }
+        else if (strcmp(step_name->valuestring, "length") == 0)
+        {
+            cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) <= 1)
+            {
+                std::vector<std::any> input_;
+                for (int i = 0; i < cJSON_GetArraySize(input); i++)
+                {
+                    cJSON *input_item = cJSON_GetArrayItem(input, i);
+                    if (cJSON_IsString(input_item))
+                    {
+                        printf("Input %d: %s\n", i, input_item->valuestring);
+                        input_.push_back(std::string(input_item->valuestring));
+                    }
+                }
+                auto next_step_ = new LengthStep(std::vector<std::any>());
+                current_step->setNextStep(next_step_);
+                next_step_->setLastStep(current_step);
+                next_step_->setInputs(input_);
+            }
+        }
+        else if (strcmp(step_name->valuestring, "replace") == 0)
+        {
+            cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) <= 3)
+            {
+                std::vector<std::any> input_;
+                for (int i = 0; i < cJSON_GetArraySize(input); i++)
+                {
+                    cJSON *input_item = cJSON_GetArrayItem(input, i);
+                    if (cJSON_IsString(input_item))
+                    {
+                        printf("Input %d: %s\n", i, input_item->valuestring);
+                        input_.push_back(std::string(input_item->valuestring));
+                    }
+                }
+                auto next_step_ = new ReplaceStep(std::vector<std::any>());
+                current_step->setNextStep(next_step_);
+                next_step_->setLastStep(current_step);
+                next_step_->setInputs(input_);
+            }
+        }
+        else if (strcmp(step_name->valuestring, "split") == 0)
+        {
+            cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) <= 2)
+            {
+                std::vector<std::any> input_;
+                for (int i = 0; i < cJSON_GetArraySize(input); i++)
+                {
+                    cJSON *input_item = cJSON_GetArrayItem(input, i);
+                    if (cJSON_IsString(input_item))
+                    {
+                        printf("Input %d: %s\n", i, input_item->valuestring);
+                        input_.push_back(std::string(input_item->valuestring));
+                    }
+                }
+                auto next_step_ = new SplitStep(std::vector<std::any>());
+                current_step->setNextStep(next_step_);
+                next_step_->setLastStep(current_step);
+                next_step_->setInputs(input_);
+            }
+        }
+        else if (strcmp(step_name->valuestring, "substring") == 0)
+        {
+            cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) == 3)
+            {
+                std::vector<std::any> input_;
+                // for (int i = 0; i < cJSON_GetArraySize(input); i++)
+                // {
+                cJSON *input_item0 = cJSON_GetArrayItem(input, 0);
+                cJSON *input_item1 = cJSON_GetArrayItem(input, 1);
+                cJSON *input_item2 = cJSON_GetArrayItem(input, 2);
+                // if (cJSON_IsString(input_item))
+                //     {
+                //         printf("Input %d: %d\n", i, input_item->valuestring);
+                //         input_.push_back(std::string(input_item->valuestring));
+                //     }
+                // }
+                if (cJSON_IsString(input_item0) && cJSON_IsNumber(input_item1) && cJSON_IsNumber(input_item2))
+                {
+                    printf("Input 0: %s\n", input_item0->valuestring);
+                    printf("Input 1: %d\n", input_item1->valueint);
+                    printf("Input 2: %d\n", input_item2->valueint);
+                    input_.push_back(std::string(input_item0->valuestring));
+                    input_.push_back(size_t(input_item1->valueint));
+                    input_.push_back(size_t(input_item2->valueint));
+                }
+                auto next_step_ = new SubtringStep(std::vector<std::any>());
+                current_step->setNextStep(next_step_);
+                next_step_->setLastStep(current_step);
+                next_step_->setInputs(input_);
+            }
+        }
+        else if (strcmp(step_name->valuestring, "toLower") == 0)
+        {
+            cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) <= 1)
+            {
+                std::vector<std::any> input_;
+                for (int i = 0; i < cJSON_GetArraySize(input); i++)
+                {
+                    cJSON *input_item = cJSON_GetArrayItem(input, i);
+                    if (cJSON_IsString(input_item))
+                    {
+                        printf("Input %d: %s\n", i, input_item->valuestring);
+                        input_.push_back(std::string(input_item->valuestring));
+                    }
+                }
+                auto next_step_ = new ToLowerStep(std::vector<std::any>());
+                current_step->setNextStep(next_step_);
+                next_step_->setLastStep(current_step);
+                next_step_->setInputs(input_);
+            }
+        }
+        else if (strcmp(step_name->valuestring, "toUpper") == 0)
+        {
+            cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) <= 1)
+            {
+                std::vector<std::any> input_;
+                for (int i = 0; i < cJSON_GetArraySize(input); i++)
+                {
+                    cJSON *input_item = cJSON_GetArrayItem(input, i);
+                    if (cJSON_IsString(input_item))
+                    {
+                        printf("Input %d: %s\n", i, input_item->valuestring);
+                        input_.push_back(std::string(input_item->valuestring));
+                    }
+                }
+                auto next_step_ = new ToUpperStep(std::vector<std::any>());
+                current_step->setNextStep(next_step_);
+                next_step_->setLastStep(current_step);
+                next_step_->setInputs(input_);
+            }
+        }
+        else if (strcmp(step_name->valuestring, "trim") == 0)
+        {
+            cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
+            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) <= 1)
+            {
+                std::vector<std::any> input_;
+                for (int i = 0; i < cJSON_GetArraySize(input); i++)
+                {
+                    cJSON *input_item = cJSON_GetArrayItem(input, i);
+                    if (cJSON_IsString(input_item))
+                    {
+                        printf("Input %d: %s\n", i, input_item->valuestring);
+                        input_.push_back(std::string(input_item->valuestring));
+                    }
+                }
+                auto next_step_ = new TrimStep(std::vector<std::any>());
+                current_step->setNextStep(next_step_);
+                next_step_->setLastStep(current_step);
+                next_step_->setInputs(input_);
             }
         }
         else if (strcmp(step_name->valuestring, "echo") == 0)
         {
-            std::shared_ptr<EchoStep> childStep_ = std::make_shared<EchoStep>(std::vector<std::any>());
-            current_step->addChild(childStep_);
+            auto next_step_ = new EchoStep(std::vector<std::any>());
+            current_step->setNextStep(next_step_);
+            next_step_->setLastStep(current_step);
+        }
+        else if (strcmp(step_name->valuestring, "end") == 0)
+        {
+            auto next_step_ = new EndStep(std::vector<std::any>());
+            current_step->setNextStep(next_step_);
+            next_step_->setLastStep(current_step);
         }
         else if (strcmp(step_name->valuestring, "ifelse") == 0)
         {
             // 示例：处理 ifelse 类型的步骤，类似地处理其他字段
-            printf("This is an ifelse step.\n");
-            cJSON *condition_name = cJSON_GetObjectItemCaseSensitive(step, "condition_name");
-            if (cJSON_IsString(condition_name) && (condition_name->valuestring != NULL))
-            {
-                if (strcmp(condition_name->valuestring, "endsWith") == 0)
-                {
-                    cJSON *conditions = cJSON_GetObjectItemCaseSensitive(step, "conditions");
-                    if (cJSON_IsArray(conditions) && cJSON_GetArraySize(conditions) == 1)
-                    {
-                        cJSON *condition = cJSON_GetArrayItem(conditions, 0);
-                        // 创建 IfElseStep 对象
-                        std::string conditionStr = condition->valuestring;
-                        std::shared_ptr<IfElseStep> ifElseStep = std::make_shared<IfElseStep>(
-                            std::vector<std::any>(), // 如果 IfElseStep 需要 inputs，可以在这里传递
-                            [wp = std::weak_ptr<IfElseStep>(ifElseStep), conditionStr]() -> bool
-                            {
-                                if (auto sp = wp.lock())
-                                { // Check if the weak_ptr can be promoted to shared_ptr
-                                    try
-                                    {
-                                        // Attempt to use any_cast to cast to string
-                                        std::string input = std::any_cast<std::string>(sp->getInput()[0]);
-                                        return StringUtils::endsWith(input, conditionStr);
-                                    }
-                                    catch (const std::bad_any_cast &)
-                                    {
-                                        // Handle the case where the cast fails
-                                        return false;
-                                    }
-                                }
-                                return false; // If the weak_ptr cannot be promoted, return false
-                            },
-                            std::vector<std::shared_ptr<BaseStep>>());
-                    }
-                }
-            }
+            // printf("This is an ifelse step.\n");
+            // cJSON *condition_name = cJSON_GetObjectItemCaseSensitive(step, "condition_name");
+            // if (cJSON_IsString(condition_name) && (condition_name->valuestring != NULL))
+            // {
+            //     if (strcmp(condition_name->valuestring, "endsWith") == 0)
+            //     {
+            //         cJSON *conditions = cJSON_GetObjectItemCaseSensitive(step, "conditions");
+            //         if (cJSON_IsArray(conditions) && cJSON_GetArraySize(conditions) == 1)
+            //         {
+            //             cJSON *condition = cJSON_GetArrayItem(conditions, 0);
+            //             // 创建 IfElseStep 对象
+            //             std::string conditionStr = condition->valuestring;
+            //             std::shared_ptr<IfElseStep> ifElseStep = std::make_shared<IfElseStep>(
+            //                 std::vector<std::any>(), // 如果 IfElseStep 需要 inputs，可以在这里传递
+            //                 [wp = std::weak_ptr<IfElseStep>(ifElseStep), conditionStr]() -> bool
+            //                 {
+            //                     if (auto sp = wp.lock())
+            //                     { // Check if the weak_ptr can be promoted to shared_ptr
+            //                         try
+            //                         {
+            //                             // Attempt to use any_cast to cast to string
+            //                             std::string input = std::any_cast<std::string>(sp->getInput()[0]);
+            //                             return StringUtils::endsWith(input, conditionStr);
+            //                         }
+            //                         catch (const std::bad_any_cast &)
+            //                         {
+            //                             // Handle the case where the cast fails
+            //                             return false;
+            //                         }
+            //                     }
+            //                     return false; // If the weak_ptr cannot be promoted, return false
+            //                 },
+            //                 std::vector<std::shared_ptr<BaseStep>>());
+            //         }
+            //     }
+            // }
 
             // 解析 "steps_true" 数组
-            cJSON *steps_true_ = cJSON_GetObjectItemCaseSensitive(step, "steps_true");
-            if (cJSON_IsArray(steps_true_))
-            {
-                parse_steps(steps_true_, current_step);
-            }
-            // 解析 "steps_false" 数组
-            cJSON *steps_false_ = cJSON_GetObjectItemCaseSensitive(step, "steps_false");
-            if (cJSON_IsArray(steps_false_))
-            {
-                parse_steps(steps_false_, current_step);
-            }
+            // cJSON *steps_true_ = cJSON_GetObjectItemCaseSensitive(step, "steps_true");
+            // if (cJSON_IsArray(steps_true_))
+            // {
+            //     parse_steps(steps_true_, current_step);
+            // }
+            // // 解析 "steps_false" 数组
+            // cJSON *steps_false_ = cJSON_GetObjectItemCaseSensitive(step, "steps_false");
+            // if (cJSON_IsArray(steps_false_))
+            // {
+            //     parse_steps(steps_false_, current_step);
+            // }
         }
-        if (current_step->has_next_step())
+        if (current_step->getNextStep() != nullptr)
         {
             current_step = current_step->getNextStep();
         }
@@ -279,5 +507,5 @@ void StepManager::parse_steps(cJSON *steps, std::shared_ptr<BaseStep> &root)
 }
 void StepManager::parse_steps(cJSON *steps)
 {
-    parse_steps(steps, root);
+    parse_steps(steps, &root_);
 }
