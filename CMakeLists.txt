@@ -154,7 +154,7 @@ target_link_libraries(DatabaseManagerTest PRIVATE sqlite3)
 
 # 添加 DataProcessorTest 单元测试
 add_executable(DataProcessorTest examples/DataProcessorTest.cc src/DataProcessor.cc)
-target_link_libraries(DataProcessorTest PRIVATE )
+target_link_libraries(DataProcessorTest PRIVATE cjson)
 
 # 添加 DataForgeEngine 单元测试
 add_executable(DataForgeEngineTest

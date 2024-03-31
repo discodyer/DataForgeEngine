@@ -11,6 +11,10 @@
 #include <functional>
 #include <memory>
 #include <any>
+#include "cJSON.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 class StringUtils
 {
@@ -109,7 +113,10 @@ protected:
 
 public:
     BaseStep(const std::string &type, const std::vector<std::any> &inputs)
-        : type(type), inputs(inputs) {}
+        : type(type), inputs(inputs), children(std::vector<std::shared_ptr<BaseStep>>()) {}
+
+    BaseStep(const std::string &type)
+        : type(type), children(std::vector<std::shared_ptr<BaseStep>>()) {}
 
     virtual ~BaseStep() {}
 
@@ -131,6 +138,12 @@ public:
         return output;
     }
 
+    // 获取输入
+    std::vector<std::any> getInput() const
+    {
+        return inputs;
+    }
+
     // 纯虚函数，执行步骤的具体操作
     virtual void execute() = 0;
 
@@ -147,6 +160,20 @@ public:
     std::string getType() const
     {
         return type;
+    }
+
+    bool has_next_step() const
+    {
+        return !children.empty();
+    }
+
+    std::shared_ptr<BaseStep> getNextStep()
+    {
+        if(children.empty())
+        {
+            return nullptr;
+        }
+        return children[0];
     }
 };
 
@@ -168,6 +195,8 @@ public:
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
+        children[0]->setInputs(this->getInput());
+        children[0]->getNextStep()->execute();
     }
 };
 
@@ -188,6 +217,8 @@ public:
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
+        children[0]->setInputs(this->getInput());
+        children[0]->getNextStep()->execute();
     }
 };
 
@@ -209,6 +240,8 @@ public:
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
+        children[0]->setInputs(this->getInput());
+        children[0]->getNextStep()->execute();
     }
 };
 
@@ -230,6 +263,8 @@ public:
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
+        children[0]->setInputs(this->getInput());
+        children[0]->getNextStep()->execute();
     }
 };
 
@@ -250,6 +285,8 @@ public:
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
+        children[0]->setInputs(this->getInput());
+        children[0]->getNextStep()->execute();
     }
 };
 
@@ -272,6 +309,8 @@ public:
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
+        children[0]->setInputs(this->getInput());
+        children[0]->getNextStep()->execute();
     }
 };
 
@@ -298,6 +337,8 @@ public:
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
+        children[0]->setInputs(this->getInput());
+        children[0]->getNextStep()->execute();
     }
 };
 
@@ -320,6 +361,8 @@ public:
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
+        children[0]->setInputs(this->getInput());
+        children[0]->getNextStep()->execute();
     }
 };
 
@@ -340,6 +383,8 @@ public:
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
+        children[0]->setInputs(this->getInput());
+        children[0]->getNextStep()->execute();
     }
 };
 
@@ -360,6 +405,8 @@ public:
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
+        children[0]->setInputs(this->getInput());
+        children[0]->getNextStep()->execute();
     }
 };
 
@@ -380,6 +427,34 @@ public:
         {
             std::cerr << "EXCEPTION: " << e.what() << '\n';
         }
+        children[0]->setInputs(this->getInput());
+        children[0]->getNextStep()->execute();
+    }
+};
+
+class EchoStep : public BaseStep
+{
+public:
+    EchoStep(const std::vector<std::any> &inputs)
+        : BaseStep("echo", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        std::cout << std::any_cast<std::string>(inputs[0]) << std::endl;
+    }
+};
+
+class EndStep : public BaseStep
+{
+public:
+    EndStep(const std::vector<std::any> &inputs)
+        : BaseStep("end", inputs) {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        std::cout << "End." << std::endl;
     }
 };
 
@@ -389,12 +464,14 @@ private:
     std::function<bool()> condition; // 条件判断函数
 
 public:
-    IfElseStep(const std::vector<std::any> &inputs, std::function<bool()> condition, const std::vector<std::shared_ptr<BaseStep>>& childSteps)
-        : BaseStep("ifelse", inputs), condition(condition) {
-            for (auto& child : childSteps) {
+    IfElseStep(const std::vector<std::any> &inputs, std::function<bool()> condition, const std::vector<std::shared_ptr<BaseStep>> &childSteps)
+        : BaseStep("ifelse", inputs), condition(condition)
+    {
+        for (auto &child : childSteps)
+        {
             children.push_back(child); // 添加子步骤到 children 列表中
         }
-        }
+    }
 
     void execute() override
     {
@@ -403,6 +480,7 @@ public:
             // 如果条件为真，执行第一个子节点
             if (!children.empty())
             {
+                children[0]->setInputs(this->getInput());
                 children[0]->execute();
             }
         }
@@ -411,8 +489,25 @@ public:
             // 如果条件为假，执行第二个子节点
             if (children.size() > 1)
             {
+                children[1]->setInputs(this->getInput());
                 children[1]->execute();
             }
+        }
+    }
+};
+
+class RootStep : public BaseStep
+{
+public:
+    RootStep()
+        : BaseStep("root") {}
+
+    // 实现具体的执行逻辑
+    void execute() override
+    {
+        if(children[0]->getNextStep())
+        {
+            children[0]->getNextStep()->execute();
         }
     }
 };
@@ -421,16 +516,17 @@ class StepManager
 {
 private:
     std::shared_ptr<BaseStep> root;
+    RootStep root_;
+
+    char *read_file(const char *filename);
+    void parse_steps(cJSON *steps, std::shared_ptr<BaseStep> &root);
+    void parse_steps(cJSON *steps);
 
 public:
     StepManager() : root(nullptr) {}
 
-    // 从 JSON 文件构建步骤树的方法（伪代码，需要实现JSON解析和树的构建）
-    void buildStepTree(const std::string &jsonFilePath)
-    {
-        // 解析 JSON 文件，构建步骤树
-        // 这里需要实现具体的 JSON 解析逻辑
-    }
+    // 从 JSON 文件构建步骤树
+    int buildStepTree(const std::string &jsonFilePath);
 
     // 执行步骤树
     void execute()
