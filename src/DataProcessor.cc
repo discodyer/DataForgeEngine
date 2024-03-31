@@ -448,56 +448,46 @@ void StepManager::parse_steps(cJSON *steps, BaseStep *root)
         }
         else if (strcmp(step_name->valuestring, "ifelse") == 0)
         {
-            // 示例：处理 ifelse 类型的步骤，类似地处理其他字段
-            // printf("This is an ifelse step.\n");
-            // cJSON *condition_name = cJSON_GetObjectItemCaseSensitive(step, "condition_name");
-            // if (cJSON_IsString(condition_name) && (condition_name->valuestring != NULL))
-            // {
-            //     if (strcmp(condition_name->valuestring, "endsWith") == 0)
-            //     {
-            //         cJSON *conditions = cJSON_GetObjectItemCaseSensitive(step, "conditions");
-            //         if (cJSON_IsArray(conditions) && cJSON_GetArraySize(conditions) == 1)
-            //         {
-            //             cJSON *condition = cJSON_GetArrayItem(conditions, 0);
-            //             // 创建 IfElseStep 对象
-            //             std::string conditionStr = condition->valuestring;
-            //             std::shared_ptr<IfElseStep> ifElseStep = std::make_shared<IfElseStep>(
-            //                 std::vector<std::any>(), // 如果 IfElseStep 需要 inputs，可以在这里传递
-            //                 [wp = std::weak_ptr<IfElseStep>(ifElseStep), conditionStr]() -> bool
-            //                 {
-            //                     if (auto sp = wp.lock())
-            //                     { // Check if the weak_ptr can be promoted to shared_ptr
-            //                         try
-            //                         {
-            //                             // Attempt to use any_cast to cast to string
-            //                             std::string input = std::any_cast<std::string>(sp->getInput()[0]);
-            //                             return StringUtils::endsWith(input, conditionStr);
-            //                         }
-            //                         catch (const std::bad_any_cast &)
-            //                         {
-            //                             // Handle the case where the cast fails
-            //                             return false;
-            //                         }
-            //                     }
-            //                     return false; // If the weak_ptr cannot be promoted, return false
-            //                 },
-            //                 std::vector<std::shared_ptr<BaseStep>>());
-            //         }
-            //     }
-            // }
+            auto ifelse_ = new IfElseStep(std::vector<std::any>());
+
+            printf("This is an ifelse step.\n");
+            cJSON *condition_name = cJSON_GetObjectItemCaseSensitive(step, "condition_name");
+            if (cJSON_IsString(condition_name) && (condition_name->valuestring != NULL))
+            {
+                if (strcmp(condition_name->valuestring, "endsWith") == 0)
+                {
+                    cJSON *conditions = cJSON_GetObjectItemCaseSensitive(step, "conditions");
+                    if (cJSON_IsArray(conditions) && cJSON_GetArraySize(conditions) == 1)
+                    {
+                        cJSON *condition = cJSON_GetArrayItem(conditions, 0);
+                        std::vector<std::any> condition_;
+                        condition_.push_back(std::string(condition->valuestring));
+                        current_step->setNextStep(ifelse_);
+                        ifelse_->setLastStep(current_step);
+                        ifelse_->setConditions(condition_);
+                    }
+                }
+            }
 
             // 解析 "steps_true" 数组
-            // cJSON *steps_true_ = cJSON_GetObjectItemCaseSensitive(step, "steps_true");
-            // if (cJSON_IsArray(steps_true_))
-            // {
-            //     parse_steps(steps_true_, current_step);
-            // }
-            // // 解析 "steps_false" 数组
-            // cJSON *steps_false_ = cJSON_GetObjectItemCaseSensitive(step, "steps_false");
-            // if (cJSON_IsArray(steps_false_))
-            // {
-            //     parse_steps(steps_false_, current_step);
-            // }
+            cJSON *steps_true_ = cJSON_GetObjectItemCaseSensitive(step, "steps_true");
+            if (cJSON_IsArray(steps_true_))
+            {
+                auto root_ = new RootStep();
+                parse_steps(steps_true_, root_);
+                ifelse_->setCondTrue(root_->getNextStep());
+                root_->getNextStep()->setLastStep(ifelse_);
+            }
+            // 解析 "steps_false" 数组
+            cJSON *steps_false_ = cJSON_GetObjectItemCaseSensitive(step, "steps_false");
+            if (cJSON_IsArray(steps_false_))
+            {
+                auto root_ = new RootStep();
+                parse_steps(steps_false_, root_);
+                ifelse_->setCondFalse(root_->getNextStep());
+                root_->getNextStep()->setLastStep(ifelse_);
+            }
+            return;
         }
         if (current_step->getNextStep() != nullptr)
         {

@@ -122,7 +122,7 @@ public:
     virtual ~BaseStep() {}
 
     // 设置输入
-    void setInputs(const std::vector<std::any> inputs)
+    virtual void setInputs(const std::vector<std::any> inputs)
     {
         for (auto input : inputs)
         {
@@ -130,19 +130,19 @@ public:
         }
     }
 
-    void addInput(const std::any input)
+    virtual void addInput(const std::any input)
     {
         this->inputs.push_back(input);
     }
 
     // 获取输入
-    std::vector<std::any> getInput() const
+    virtual std::vector<std::any> getInput() const
     {
         return inputs;
     }
 
     // 获取输出
-    std::vector<std::any> getOutputs() const
+    virtual std::vector<std::any> getOutputs() const
     {
         return outputs;
     }
@@ -151,27 +151,27 @@ public:
     virtual void execute() = 0;
 
     // 获取步骤类型
-    std::string getType() const
+    virtual std::string getType() const
     {
         return type;
     }
 
-    void setNextStep(BaseStep *next_step)
+    virtual void setNextStep(BaseStep *next_step)
     {
         next_step_ = next_step;
     }
 
-    void setLastStep(BaseStep *last_step)
+    virtual void setLastStep(BaseStep *last_step)
     {
         last_step_ = last_step;
     }
 
-    BaseStep *getNextStep()
+    virtual BaseStep *getNextStep()
     {
         return next_step_;
     }
 
-    BaseStep *getLastStep()
+    virtual BaseStep *getLastStep()
     {
         return last_step_;
     }
@@ -469,43 +469,90 @@ public:
     }
 };
 
-// class IfElseStep : public BaseStep
-// {
-// private:
-//     std::function<bool()> condition; // 条件判断函数
+class IfElseStep : public BaseStep
+{
+private:
+    BaseStep *cond_true_;
+    BaseStep *cond_false_;
+    std::vector<std::any> conditions;
 
-// public:
-//     IfElseStep(const std::vector<std::any> &inputs, std::function<bool()> condition, const std::vector<std::shared_ptr<BaseStep>> &childSteps)
-//         : BaseStep("ifelse", inputs), condition(condition)
-//     {
-//         for (auto &child : childSteps)
-//         {
-//             // children.push_back(child); // 添加子步骤到 children 列表中
-//         }
-//     }
+public:
+    IfElseStep(const std::vector<std::any> &inputs)
+        : BaseStep("ifelse", inputs)
+    {
+        cond_true_ = nullptr;
+        cond_false_ = nullptr;
+    }
 
-//     void execute() override
-//     {
-//         if (condition())
-//         {
-//             // 如果条件为真，执行第一个子节点
-//             if (!children.empty())
-//             {
-//                 children[0]->setInputs(this->getInput());
-//                 children[0]->execute();
-//             }
-//         }
-//         else
-//         {
-//             // 如果条件为假，执行第二个子节点
-//             if (children.size() > 1)
-//             {
-//                 children[1]->setInputs(this->getInput());
-//                 children[1]->execute();
-//             }
-//         }
-//     }
-// };
+    void setConditions(const std::vector<std::any> &conditions)
+    {
+        for (auto condition : conditions)
+        {
+            addCondition(condition);
+        }
+    }
+
+    void addCondition(const std::any condition)
+    {
+        this->conditions.push_back(condition);
+    }
+
+    void setCondTrue(BaseStep *cond_true)
+    {
+        cond_true_ = cond_true;
+    }
+
+    void setCondFalse(BaseStep *cond_false)
+    {
+        cond_false_ = cond_false;
+    }
+
+    BaseStep *getCondTrue()
+    {
+        return cond_true_;
+    }
+
+    BaseStep *getCondFalse()
+    {
+        return cond_false_;
+    }
+
+    void setNextStep(BaseStep *next_step)
+    {
+        next_step_ = next_step;
+    }
+
+    BaseStep *getNextStep()
+    {
+        return cond_true_;
+    }
+
+    void execute() override
+    {
+        if (inputs.empty() && conditions.empty())
+        {
+            return;
+        }
+        if (StringUtils::endsWith(std::any_cast<std::string>(inputs[0]), std::any_cast<std::string>(conditions[0])))
+        {
+            // 如果条件为真，执行第一个子节点
+            if (getCondTrue())
+            {
+                getCondTrue()->setInputs(getLastStep()->getOutputs());
+                getCondTrue()->execute();
+            }
+        }
+        else
+        {
+            // 如果条件为假，执行第二个子节点
+            if (getCondFalse())
+            {
+                getCondFalse()->setInputs(getLastStep()->getOutputs());
+                getCondFalse()->execute();
+            }
+        }
+    }
+};
 
 class RootStep : public BaseStep
 {
