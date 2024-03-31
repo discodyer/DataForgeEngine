@@ -195,7 +195,7 @@ void StepManager::parse_steps(cJSON *steps, BaseStep *root)
         if (strcmp(step_name->valuestring, "concat") == 0)
         {
             cJSON *input = cJSON_GetObjectItemCaseSensitive(step, "input");
-            if (cJSON_IsArray(input) && cJSON_GetArraySize(input) > 0)
+            if (cJSON_IsArray(input))
             {
                 std::vector<std::any> input_;
                 for (int i = 0; i < cJSON_GetArraySize(input); i++)
@@ -477,6 +477,7 @@ void StepManager::parse_steps(cJSON *steps, BaseStep *root)
                 parse_steps(steps_true_, root_);
                 ifelse_->setCondTrue(root_->getNextStep());
                 root_->getNextStep()->setLastStep(ifelse_);
+                delete(root_);
             }
             // 解析 "steps_false" 数组
             cJSON *steps_false_ = cJSON_GetObjectItemCaseSensitive(step, "steps_false");
@@ -486,6 +487,7 @@ void StepManager::parse_steps(cJSON *steps, BaseStep *root)
                 parse_steps(steps_false_, root_);
                 ifelse_->setCondFalse(root_->getNextStep());
                 root_->getNextStep()->setLastStep(ifelse_);
+                delete(root_);
             }
             return;
         }

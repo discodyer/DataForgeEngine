@@ -44,7 +44,7 @@ void PostRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerRes
             }
             else if (protocolValue == "serial")
             {
-                out << "Serial: Not supported yet!";
+                out << "Serial: Hello!";
             }
             else
             {
