@@ -25,9 +25,9 @@ void DataForgeEngine::fetchDataFromMqtt() {
 }
 
 void DataForgeEngine::fetchDataFromSerialPort() {
-    std::string data = serialPort.read();
-    std::string parsedData = parseData(data);
-    storeDataInDatabase(parsedData);
+    // std::string data = serialPort.read();
+    // std::string parsedData = parseData(data);
+    // storeDataInDatabase(parsedData);
 }
 
 void DataForgeEngine::storeDataInDatabase(const std::string& data) {

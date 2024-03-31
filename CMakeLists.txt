@@ -16,6 +16,7 @@ include_directories(${PROJECT_SOURCE_DIR}/libs/mosquitto/include)
 include_directories(${PROJECT_SOURCE_DIR}/libs/curl/include)
 include_directories(${PROJECT_SOURCE_DIR}/libs/libserial/src)
 include_directories(${PROJECT_SOURCE_DIR}/libs/cjson)
+include_directories(${PROJECT_SOURCE_DIR}/libs/)
 include_directories(${PROJECT_SOURCE_DIR}/libs/curlpp/include)
 include_directories(
    ${PROJECT_SOURCE_DIR}/libs/poco/ApacheConnector/include
@@ -112,7 +113,7 @@ set(link_libraries
 )
 
 # 指定生成目标
-add_executable(DataForge ${DIR_SRCS})
+add_executable(DataForge ${DIR_SRCS}) # 数据处理引擎
 
 # 确保链接到libs目录下编译的libs
 target_link_libraries(DataForge PRIVATE ${link_libraries})
@@ -123,7 +124,7 @@ target_link_libraries(HttpPostGet PRIVATE curlpp libcurl)
 
 # 添加 MQTT 客户端 单元测试测试
 add_executable(MqttClientTest examples/MqttClientTest.cc src/MqttClient.cc)
-target_link_libraries(MqttClientTest PRIVATE mosquittopp)
+target_link_libraries(MqttClientTest PRIVATE cjson mosquittopp)
 
 # 添加 JSON 解析器单元测试
 add_executable(JsonParserTest examples/JsonParserTest.cc src/JsonParser.cc)
@@ -133,6 +134,10 @@ target_link_libraries(JsonParserTest PRIVATE cjson)
 add_executable(SerialPortTest examples/SerialPortTest.cc src/SerialPort.cc)
 target_link_libraries(SerialPortTest PRIVATE serial)
 
+# 添加串口监视器目标
+add_executable(SerialMonitor examples/SerialMonitor.cc src/SerialPort.cc)
+target_link_libraries(SerialMonitor PRIVATE serial)
+
 # 添加 WebInterface 单元测试
 add_executable(WebInterfaceTest 
     examples/WebInterfaceTest.cc 
@@ -141,7 +146,7 @@ add_executable(WebInterfaceTest
     src/MqttClient.cc
     src/SerialPort.cc
 )
-target_link_libraries(WebInterfaceTest PRIVATE curlpp libcurl ${poco_targets} serial mosquittopp cjson)
+target_link_libraries(WebInterfaceTest PRIVATE curlpp libcurl ${poco_targets} serial cjson mosquittopp)
 
 # 添加 DatabaseManager 单元测试
 add_executable(DatabaseManagerTest examples/DatabaseManagerTest.cc src/DatabaseManager.cc)
@@ -166,11 +171,11 @@ target_link_libraries(DataForgeEngineTest PRIVATE ${link_libraries})
 
 enable_testing()
 
-add_test(NAME HttpPostGetTest COMMAND HttpPostGet)
-add_test(NAME MqttClientTest COMMAND MqttClientTest)
-add_test(NAME JsonParserTest COMMAND JsonParserTest)
-# add_test(NAME SerialPortTest COMMAND SerialPortTest)
-# add_test(NAME WebInterfaceTest COMMAND WebInterfaceTest)
-add_test(NAME DatabaseManagerTest COMMAND DatabaseManagerTest)
-add_test(NAME DataProcessorTest COMMAND DataProcessorTest)
-add_test(NAME DataForgeEngineTest COMMAND DataForgeEngineTest)
+add_test(NAME HttpPostGetTest COMMAND HttpPostGet) # 测试HTTP库功能
+add_test(NAME MqttClientTest COMMAND MqttClientTest) # 测试MQTT库功能
+add_test(NAME JsonParserTest COMMAND JsonParserTest) # 测试JSON序列化和反序列化功能
+add_test(NAME SerialPortTest COMMAND SerialPortTest) # 未连接串口设备会提示出错,因此暂时不测试串口功能
+# add_test(NAME WebInterfaceTest COMMAND WebInterfaceTest) # 测试网页响应功能
+add_test(NAME DatabaseManagerTest COMMAND DatabaseManagerTest) # 测试数据库
+add_test(NAME DataProcessorTest COMMAND DataProcessorTest) # 测试数据处理库
+add_test(NAME DataForgeEngineTest COMMAND DataForgeEngineTest) # 测试数据处理引擎

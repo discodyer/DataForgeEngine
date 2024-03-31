@@ -18,7 +18,7 @@ private:
     HttpClient httpClient;
     MqttClient mqttClient;
     JsonParser jsonParser;
-    SerialPortWrapper serialPort;
+    SerialBase serialPort;
     DatabaseManager databaseManager;
 
     void fetchDataFromHttp();

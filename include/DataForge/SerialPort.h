@@ -1,25 +1,36 @@
-#ifndef SERIALPORT_H
-#define SERIALPORT_H
+#ifndef SERIALPORTWRAPPER_H
+#define SERIALPORTWRAPPER_H
 
 #include <libserial/SerialPort.h>
 #include <string>
 
-class SerialPortWrapper {
+#include <string>
+#include <libserial/SerialStream.h> // 请确保已安装 serial 库
+#include <libserial/SerialPort.h>
+
+class SerialBase
+{
 public:
-    SerialPortWrapper(const std::string& portName, unsigned int baudRate = 9600);
-    ~SerialPortWrapper();
+    SerialBase(const std::string &port, int baud_rate);
+    ~SerialBase();
 
-    void open();
+    bool open();
+    bool isOpen();
     void close();
-    bool isOpen() const;
+    bool readByte(uint8_t &data, size_t timeout);
+    bool writeByte(const uint8_t &data);
+    bool write(const std::vector<uint8_t>& raw_data);
+    bool write(const std::string &str);
+    bool read(std::vector<uint8_t>& buffer, size_t buffer_size, size_t timeout_ms);
 
-    void write(const std::string& data);
-    std::string read();
+protected:
+    static bool is_open_;
 
 private:
-    std::string portName;
-    unsigned int baudRate;
-    LibSerial::SerialPort serialPort;
+    std::string port_;
+    int baud_rate_;
+    static LibSerial::SerialPort serial_port_;
+    LibSerial::BaudRate getBaudRate(const int baud_rate) const;
 };
 
-#endif // SERIALPORT_H
+#endif // SERIALPORTWRAPPER_H

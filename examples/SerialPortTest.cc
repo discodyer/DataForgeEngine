@@ -3,7 +3,7 @@
 #include <assert.h>
 
 int main() {
-    SerialPortWrapper serialPort("/dev/ttyUSB0", 9600); // 请根据实际情况调整串口名称和波特率
+    SerialBase serialPort("/dev/ttyUSB0", 9600); // 请根据实际情况调整串口名称和波特率
     serialPort.open();
 
     assert(serialPort.isOpen());
@@ -12,8 +12,8 @@ int main() {
     serialPort.write("Hello, SerialPort!\n");
 
     // 读取数据（这里假设有回显或有设备回应）
-    std::string response = serialPort.read();
-    std::cout << "Received response: " << response << std::endl;
+    // std::string response = serialPort.read();
+    // std::cout << "Received response: " << response << std::endl;
 
     serialPort.close();
     assert(!serialPort.isOpen());
