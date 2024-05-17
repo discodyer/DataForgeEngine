@@ -18,10 +18,28 @@
 #include "SerialPort.h"
 #include "MqttClient.h"
 #include "cJSON.h"
+#include <Poco/StreamCopier.h>
 
 using namespace Poco::Net;
 using namespace Poco::Util;
-using namespace std;
+using namespace Poco;
+
+// 返回网页主页回调函数
+class GetPageRequestHandler : public HTTPRequestHandler
+{
+public:
+    void handleRequest(HTTPServerRequest& request, HTTPServerResponse& response) override ;
+    explicit GetPageRequestHandler(const std::string& filePath);
+private:
+    std::string _filePath;
+};
+
+// HTTP 服务器主函数
+class HTTPServerApp : public ServerApplication
+{
+protected:
+    int main(const std::vector<std::string>& args) override ;
+};
 
 class PostRequestHandler : public HTTPRequestHandler
 {
@@ -35,6 +53,13 @@ public:
     std::string fetchDataFromSerialPort(const std::string& payload);
 };
 
+class DataEngineRequestHandler : public HTTPRequestHandler
+{
+public:
+    void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) override;
+};
+
+// 请求处理
 class RequestHandlerFactory : public HTTPRequestHandlerFactory
 {
 public:
@@ -44,7 +69,26 @@ public:
 class WebInterface : public ServerApplication
 {
 protected:
-    int main(const vector<string> &) override;
+    int main(const std::vector<std::string> &) override;
+};
+
+class FilePartHandler : public PartHandler {
+private:
+    std::string _data;
+
+public:
+    void handlePart(const MessageHeader& header, std::istream& stream) override {
+        if (header.get("Content-Disposition").find("filename=") != std::string::npos) {
+            // 说明这部分是一个文件
+            std::ostringstream ss;
+            StreamCopier::copyStream(stream, ss);
+            _data = ss.str();
+        }
+    }
+
+    const std::string& data() const {
+        return _data;
+    }
 };
 
 #endif // WEBINTERFACE_H

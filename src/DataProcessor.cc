@@ -158,6 +158,32 @@ int StepManager::buildStepTree(const std::string &jsonFilePath)
     return EXIT_SUCCESS;
 }
 
+int StepManager::buildStepTreeFromString(const std::string &json_string)
+{
+    cJSON *json = cJSON_Parse(json_string.c_str());
+    if (json == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+        }
+        // free(data);
+        return EXIT_FAILURE;
+    }
+
+    // 解析 "steps" 数组
+    cJSON *steps = cJSON_GetObjectItemCaseSensitive(json, "steps");
+    if (cJSON_IsArray(steps))
+    {
+        parse_steps(steps);
+    }
+
+    cJSON_Delete(json);
+    // free(data);
+    return EXIT_SUCCESS;
+}
+
 char *StepManager::read_file(const char *filename)
 {
     FILE *f = fopen(filename, "rb");
@@ -448,7 +474,6 @@ void StepManager::parse_steps(cJSON *steps, BaseStep *root)
         }
         else if (strcmp(step_name->valuestring, "ifelse") == 0)
         {
-            auto ifelse_ = new IfElseStep(std::vector<std::any>());
 
             printf("This is an ifelse step.\n");
             cJSON *condition_name = cJSON_GetObjectItemCaseSensitive(step, "condition_name");
@@ -462,34 +487,71 @@ void StepManager::parse_steps(cJSON *steps, BaseStep *root)
                         cJSON *condition = cJSON_GetArrayItem(conditions, 0);
                         std::vector<std::any> condition_;
                         condition_.push_back(std::string(condition->valuestring));
+                        auto ifelse_ = new IfElseStep(std::vector<std::any>());
                         current_step->setNextStep(ifelse_);
                         ifelse_->setLastStep(current_step);
                         ifelse_->setConditions(condition_);
+
+                        // 解析 "steps_true" 数组
+                        cJSON *steps_true_ = cJSON_GetObjectItemCaseSensitive(step, "steps_true");
+                        if (cJSON_IsArray(steps_true_))
+                        {
+                            auto root_ = new RootStep();
+                            parse_steps(steps_true_, root_);
+                            ifelse_->setCondTrue(root_->getNextStep());
+                            root_->getNextStep()->setLastStep(ifelse_);
+                            delete (root_);
+                        }
+                        // 解析 "steps_false" 数组
+                        cJSON *steps_false_ = cJSON_GetObjectItemCaseSensitive(step, "steps_false");
+                        if (cJSON_IsArray(steps_false_))
+                        {
+                            auto root_ = new RootStep();
+                            parse_steps(steps_false_, root_);
+                            ifelse_->setCondFalse(root_->getNextStep());
+                            root_->getNextStep()->setLastStep(ifelse_);
+                            delete (root_);
+                        }
+                        return;
+                    }
+                }
+                else if (strcmp(condition_name->valuestring, "bigger") == 0)
+                {
+                    cJSON *conditions = cJSON_GetObjectItemCaseSensitive(step, "conditions");
+                    if (cJSON_IsArray(conditions) && cJSON_GetArraySize(conditions) == 1)
+                    {
+                        cJSON *condition = cJSON_GetArrayItem(conditions, 0);
+                        std::vector<std::any> condition_;
+                        condition_.push_back(std::string(condition->valuestring));
+                        auto ifelse_ = new IfElseBiggerStep(std::vector<std::any>());
+                        current_step->setNextStep(ifelse_);
+                        ifelse_->setLastStep(current_step);
+                        ifelse_->setConditions(condition_);
+
+                        // 解析 "steps_true" 数组
+                        cJSON *steps_true_ = cJSON_GetObjectItemCaseSensitive(step, "steps_true");
+                        if (cJSON_IsArray(steps_true_))
+                        {
+                            auto root_ = new RootStep();
+                            parse_steps(steps_true_, root_);
+                            ifelse_->setCondTrue(root_->getNextStep());
+                            root_->getNextStep()->setLastStep(ifelse_);
+                            delete (root_);
+                        }
+                        // 解析 "steps_false" 数组
+                        cJSON *steps_false_ = cJSON_GetObjectItemCaseSensitive(step, "steps_false");
+                        if (cJSON_IsArray(steps_false_))
+                        {
+                            auto root_ = new RootStep();
+                            parse_steps(steps_false_, root_);
+                            ifelse_->setCondFalse(root_->getNextStep());
+                            root_->getNextStep()->setLastStep(ifelse_);
+                            delete (root_);
+                        }
+                        return;
                     }
                 }
             }
-
-            // 解析 "steps_true" 数组
-            cJSON *steps_true_ = cJSON_GetObjectItemCaseSensitive(step, "steps_true");
-            if (cJSON_IsArray(steps_true_))
-            {
-                auto root_ = new RootStep();
-                parse_steps(steps_true_, root_);
-                ifelse_->setCondTrue(root_->getNextStep());
-                root_->getNextStep()->setLastStep(ifelse_);
-                delete(root_);
-            }
-            // 解析 "steps_false" 数组
-            cJSON *steps_false_ = cJSON_GetObjectItemCaseSensitive(step, "steps_false");
-            if (cJSON_IsArray(steps_false_))
-            {
-                auto root_ = new RootStep();
-                parse_steps(steps_false_, root_);
-                ifelse_->setCondFalse(root_->getNextStep());
-                root_->getNextStep()->setLastStep(ifelse_);
-                delete(root_);
-            }
-            return;
         }
         if (current_step->getNextStep() != nullptr)
         {

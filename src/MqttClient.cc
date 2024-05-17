@@ -88,6 +88,12 @@ void MqttClient::doLoop(int timeout)
     {
         std::this_thread::sleep_for(std::chrono::seconds(1)); // 等待订阅完成
     }
+    
+    if (!received) {
+        std::cout << "Timeout occurred." << std::endl;
+    } else {
+        std::cout << "Received signal before timeout." << std::endl;
+    }
 
     // 清理资源
     // mosquitto_disconnect(mosq);

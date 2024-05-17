@@ -471,7 +471,7 @@ public:
 
 class IfElseStep : public BaseStep
 {
-private:
+public:
     BaseStep *cond_true_;
     BaseStep *cond_false_;
     std::vector<std::any> conditions;
@@ -554,6 +554,43 @@ public:
     }
 };
 
+class IfElseBiggerStep : public IfElseStep
+{
+public:
+    IfElseBiggerStep(const std::vector<std::any> &inputs)
+        : IfElseStep(inputs)
+    {
+        cond_true_ = nullptr;
+        cond_false_ = nullptr;
+    }
+    void execute() override
+    {
+        if (inputs.empty() && conditions.empty())
+        {
+            return;
+        }
+
+        if (std::stoi(std::any_cast<std::string>(inputs[0])) > std::stoi(std::any_cast<std::string>(conditions[0])))
+        {
+            // 如果条件为真，执行第一个子节点
+            if (getCondTrue())
+            {
+                getCondTrue()->setInputs(getLastStep()->getOutputs());
+                getCondTrue()->execute();
+            }
+        }
+        else
+        {
+            // 如果条件为假，执行第二个子节点
+            if (getCondFalse())
+            {
+                getCondFalse()->setInputs(getLastStep()->getOutputs());
+                getCondFalse()->execute();
+            }
+        }
+    }
+};
+
 class RootStep : public BaseStep
 {
 public:
@@ -573,7 +610,7 @@ public:
 class StepManager
 {
 private:
-    RootStep root_;
+    RootStep root_; // 根节点
 
     char *read_file(const char *filename);
     void parse_steps(cJSON *steps, BaseStep *root);
@@ -584,6 +621,7 @@ public:
 
     // 从 JSON 文件构建步骤树
     int buildStepTree(const std::string &jsonFilePath);
+    int buildStepTreeFromString(const std::string &json);
 
     // 执行步骤树
     void execute()

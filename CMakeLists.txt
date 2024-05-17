@@ -169,6 +169,20 @@ add_executable(DataForgeEngineTest
 )
 target_link_libraries(DataForgeEngineTest PRIVATE ${link_libraries})
 
+# 添加 DataForgeEngine 网页服务器
+add_executable(DataForgeEngineWeb
+    examples/DataForgeEngineWeb.cc
+    src/DataForgeEngine.cc
+    src/HttpClient.cc
+    src/MqttClient.cc
+    src/JsonParser.cc
+    src/SerialPort.cc
+    src/WebInterface.cc
+    src/DatabaseManager.cc
+    src/Logger.cc
+)
+target_link_libraries(DataForgeEngineWeb PRIVATE ${link_libraries})
+
 enable_testing()
 
 add_test(NAME HttpPostGetTest COMMAND HttpPostGet) # 测试HTTP库功能
